@@ -1,0 +1,117 @@
+*aikido.txt*	A Jujutsu interface
+Alex Davis                                                            *aikido*
+
+==============================================================================
+CONTENTS                                                     *aikido-contents*
+  1. Introduction...............................................|aikido-intro|
+  2. Configuration.............................................|aikido-config|
+  3. Commands................................................|aikido-commands|
+  4. Functions..............................................|aikido-functions|
+
+==============================================================================
+INTRODUCTION                                                    *aikido-intro*
+
+CURRENT ISSUES
+Splitting with diffs sometimes results in a mutated buffer that cannot be
+saved or closed (due to writing).  This can be rectified currently by using
+
+  :set nomodifed
+
+on the diff buffer prior to closing.
+
+==============================================================================
+CONFIGURATION                                                  *aikido-config*
+
+This plugin uses maktaba flags for configuration. Install Glaive
+(https://github.com/google/glaive) and use the |:Glaive| command to configure
+them.
+
+                                                     *aikido:plugin[commands]*
+Configures whether plugin/commands.vim should be loaded.
+Default: 1 `
+
+                                                     *aikido:plugin[mappings]*
+Configures whether plugin/mappings.vim should be loaded.
+Default: 0 `
+
+==============================================================================
+COMMANDS                                                     *aikido-commands*
+
+:AKDiff                                                              *:AKDiff*
+  Diffs the working file against a specific revision.
+
+  This command does a horizontal split when opening the new diff.
+
+:AKVdiff [revision]                                                 *:AKVdiff*
+  Diffs the working file against a specific [revision].
+
+  This command does a vertical split when opening the new diff.
+  [revision] is "@-" if omitted.
+
+:AKChanges [commit]                                               *:AKChanges*
+  Shows changed files in the [commit].
+
+  If the requested commit is empty then the first ancestor is checked for
+  changes as well.  This function does not check deeper than the first
+  ancestor.
+  [commit] is \@ if omitted.
+
+
+:AKGrep                                                              *:AKGrep*
+  Greps for a prompt-provided string in all files represented by the current
+  commit.
+
+  If the current commit is empty then th eparent commit is checked.  Grepping
+  is done using :vimgrep.
+
+:AKGrepCword                                                    *:AKGrepCword*
+  Greps for the word under the cursor in all files represented by the current
+  commit.
+
+  If the current commit is empty then th eparent commit is checked.  Grepping
+  is done using :vimgrep.
+
+==============================================================================
+FUNCTIONS                                                   *aikido-functions*
+
+aikido#Root()                                                  *aikido#Root()*
+  Returns the root of the VCS Workspace.
+
+aikido#Grep({word})                                            *aikido#Grep()*
+  Searches through modified and new files to find the |<cword>|, returning the
+  matching lines in the quickfix window..
+
+aikido#GrepPrompt()                                      *aikido#GrepPrompt()*
+  Searches through modified and new files to find a certain string, returning
+  the matching lines in the quickfix window..
+
+aikido#Diff([revision])                                        *aikido#Diff()*
+  Diffs the working copy against [revision].
+
+  This is the implementation for |:Akdiff|
+  [revision] is "@-" if omitted.
+
+
+aikido#Vdiff([revision])                                      *aikido#Vdiff()*
+  Diffs the working copy against [revision] with a vertical split.
+
+aikido#Annotate()                                          *aikido#Annotate()*
+  Provides annotations for each line of code and when it was last changed, the
+  most recent author, etc.
+
+aikido#Changes()                                            *aikido#Changes()*
+  An FZF selection pop-up for files currently changed compared to the first
+  parent commit.
+
+aikido#NewCommit()                                        *aikido#NewCommit()*
+  Establishes a new commit with the current working changes.
+
+  CURRENTLY A WORK-IN-PROGRESS
+
+aikido#Describe()                                          *aikido#Describe()*
+  Updates the current commit message for the working copy.
+
+  CURRENTLY A WORK-IN-PROGRESS
+
+
+vim:tw=78:ts=8:ft=help:norl:

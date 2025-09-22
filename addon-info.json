@@ -1,0 +1,11 @@
+{
+  "name": "aikido",
+  "description": "A Jujutsu interface",
+  "author": "Alex Davis",
+  "dependencies": {
+    "maktaba": {
+      "type": "git", 
+      "url": "git://github.com/google/maktaba"
+    }
+  }
+}
