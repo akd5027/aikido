@@ -97,12 +97,11 @@ function! aikido#Diff(...) abort
   let vertical = get(a:, 2, 0)
   let content = systemlist('jj file show --quiet --revision=' .. l:rev .. ' -- ' .. expand("%"))
 
-  if exists('akdiff') == 0
-    let diff_buff = bufadd('akdiff')
-  else
-    let diff_buff = bufnr('akdiff')
+  if bufexists('akdiff')
+    execute 'bwipeout ' .. bufnr('akdiff')
   endif
 
+  let diff_buff = bufadd('akdiff')
   call bufload(l:diff_buff)
 
   call deletebufline(l:diff_buff, 1, '$')
@@ -115,7 +114,7 @@ function! aikido#Diff(...) abort
     execute 'sbuffer ' .. l:diff_buff
   endif
 
-  setlocal nomodified nomodifiable nowrite
+  setlocal bufhidden=wipe buftype=nofile
 
   difft
   wincmd p
@@ -144,7 +143,7 @@ function! aikido#Annotate() abort
   call appendbufline(l:blame_buff, 1, l:content)
   call deletebufline(l:blame_buff, 1)
 
-  setlocal nomodified nomodifiable scrollbind
+  setlocal buftype=nofile bufhidden=wipe
   wincmd p
   setlocal scrollbind
 
