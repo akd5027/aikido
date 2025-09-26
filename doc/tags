@@ -17,7 +17,6 @@ aikido-commands	aikido.txt	/*aikido-commands*
 aikido-config	aikido.txt	/*aikido-config*
 aikido-contents	aikido.txt	/*aikido-contents*
 aikido-functions	aikido.txt	/*aikido-functions*
-aikido-intro	aikido.txt	/*aikido-intro*
 aikido.txt	aikido.txt	/*aikido.txt*
 aikido:plugin[commands]	aikido.txt	/*aikido:plugin[commands]*
 aikido:plugin[mappings]	aikido.txt	/*aikido:plugin[mappings]*

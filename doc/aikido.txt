@@ -3,21 +3,9 @@ Alex Davis                                                            *aikido*
 
 ==============================================================================
 CONTENTS                                                     *aikido-contents*
-  1. Introduction...............................................|aikido-intro|
-  2. Configuration.............................................|aikido-config|
-  3. Commands................................................|aikido-commands|
-  4. Functions..............................................|aikido-functions|
-
-==============================================================================
-INTRODUCTION                                                    *aikido-intro*
-
-CURRENT ISSUES
-Splitting with diffs sometimes results in a mutated buffer that cannot be
-saved or closed (due to writing).  This can be rectified currently by using
-
-  :set nomodifed
-
-on the diff buffer prior to closing.
+  1. Configuration.............................................|aikido-config|
+  2. Commands................................................|aikido-commands|
+  3. Functions..............................................|aikido-functions|
 
 ==============================================================================
 CONFIGURATION                                                  *aikido-config*

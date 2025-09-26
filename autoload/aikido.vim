@@ -1,16 +1,6 @@
 let s:plugin = maktaba#plugin#Get('aikido')
 
 ""
-" @section Introduction, intro
-" @subsection Current Issues
-" Splitting with diffs sometimes results in a mutated buffer that cannot be
-" saved or closed (due to writing).  This can be rectified currently by using
-"
-"   :set nomodifed
-"
-" on the diff buffer prior to closing.
-
-""
 " Gets the currently important modified files.
 "
 " If this is run in an empty commit then the parent commit is used instead.
