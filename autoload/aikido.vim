@@ -86,12 +86,13 @@ function! aikido#Diff(...) abort
   let rev = get(a:, 1, '@-')
   let vertical = get(a:, 2, 0)
   let content = systemlist('jj file show --quiet --revision=' .. l:rev .. ' -- ' .. expand("%"))
+  let buffer_name = 'diff_' .. expand("%:t")
 
-  if bufexists('akdiff')
-    execute 'bwipeout ' .. bufnr('akdiff')
+  if bufexists(l:buffer_name)
+    execute 'bwipeout ' .. bufnr(l:buffer_name)
   endif
 
-  let diff_buff = bufadd('akdiff')
+  let diff_buff = bufadd(l:buffer_name)
   call bufload(l:diff_buff)
 
   call deletebufline(l:diff_buff, 1, '$')
