@@ -18,5 +18,6 @@ aikido-config	aikido.txt	/*aikido-config*
 aikido-contents	aikido.txt	/*aikido-contents*
 aikido-functions	aikido.txt	/*aikido-functions*
 aikido.txt	aikido.txt	/*aikido.txt*
+aikido:file_preview_split	aikido.txt	/*aikido:file_preview_split*
 aikido:plugin[commands]	aikido.txt	/*aikido:plugin[commands]*
 aikido:plugin[mappings]	aikido.txt	/*aikido:plugin[mappings]*

@@ -14,6 +14,19 @@ This plugin uses maktaba flags for configuration. Install Glaive
 (https://github.com/google/glaive) and use the |:Glaive| command to configure
 them.
 
+                                                   *aikido:file_preview_split*
+Determines if the Aikido change-splits occur vertically or horizonally.
+Allowable values include:
+
+  * 'top'
+  * 'bottom'
+  * 'left'
+  * 'right'
+
+Vertical split results in a side-by-side preview, while a horizontal split
+results in a top-and-bottom preview.
+Default: 'right' `
+
                                                      *aikido:plugin[commands]*
 Configures whether plugin/commands.vim should be loaded.
 Default: 1 `

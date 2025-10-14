@@ -146,10 +146,12 @@ endfunction
 " parent commit.
 function! aikido#Changes() abort
   let [rev, files] = s:GetRecentModifiedFiles()
+
   call fpop#Picker(l:files, #{
         \fzf_args: [
           \'--header=enter open | ^s split | ^v diff',
           \'--preview=jj file show -r ' .. l:rev ..' {}',
+          \'--preview-window=' .. s:plugin.Flag('file_preview_split'),
           \'--expect=enter,ctrl-s,ctrl-v'
         \],
         \callback: function('aikido#ChangeCallback')
