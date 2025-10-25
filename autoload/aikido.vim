@@ -32,9 +32,8 @@ endfunction
 ""
 " A callback for the FZF modified file picker.
 function! aikido#ChangeCallback(lines)
-  let content = split(a:lines[0])
-  let command = l:content[0]
-  let file = join(l:content[1:], ' ')
+  let [command ; multi_file] = split(a:lines[0])
+  let file = join(l:multi_file, ' ')
 
   if l:command == "enter"
     exec 'edit ' . l:file
