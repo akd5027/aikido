@@ -16,3 +16,6 @@ execute 'nnoremap <unique> <silent>' s:prefix . 'd' ':AKDiff<CR>'
 " Opens an FZF popup allowing for selection of a file already modified in the
 " current commit.  The selected file will be opened for editing.
 execute 'nnoremap <unique> <silent>' s:prefix . 'p' ':AKChanges<CR>'
+
+" Updates the existing description for the current commit.
+execute 'nnoremap <unique> <silent>' s:prefix . 'x' ':AKDescribe<CR>'

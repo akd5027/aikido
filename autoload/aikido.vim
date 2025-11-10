@@ -172,16 +172,44 @@ endfunction
 " @public
 " Updates the current commit message for the working copy.
 "
-" CURRENTLY A WORK-IN-PROGRESS
-function! aikido#Describe(...)
-  let message = get(a:, 0, v:none)
+" If [revisions] is not provided, it will default to the current commit.
+"
+" As with other commands, this command will not commit the working copy.
+function! aikido#Describe(bang, ...)
+  let rev = get(a:, 1, '@')
 
-  if l:message != v:none
-    let desc_func = maktaba#syscall#Create(['jj', 'describe', '--message', l:message])
-  else
-    let desc_func = maktaba#syscall#Create(['jj', 'describe'])
+  let args = [
+        \'--no-patch',
+        \'--template=builtin_draft_commit_description',
+        \l:rev]
+
+  let bang_args = []
+  if a:bang
+    bang_args += ['--ignore_working_copy']
   endif
 
-  l:desc_func.Call()
+  let message = maktaba#syscall#Create(['jj','show'] + l:bang_args + l:args)
+        \.Call().stdout->split('\n')
+
+  let desc_buf = bufadd('_aikido_desc')
+  call bufload(l:desc_buf)
+
+  call deletebufline(l:desc_buf, 1, "$")
+  call appendbufline(l:desc_buf, 1, l:message)
+  call deletebufline(l:desc_buf, 1)
+
+  execute 'sbuffer ' .. l:desc_buf
+
+  setlocal bufhidden=wipe buftype=acwrite filetype=jjdescription
+
+  augroup aikido_diff_close
+    autocmd!
+
+    autocmd BufWriteCmd <buffer> call maktaba#syscall#Create(
+          \['jj', 'describe', '--stdin'] + l:bang_args)
+          \.WithStdin(getline(1, '$')->join("\n")).Call()
+    autocmd BufWriteCmd <buffer> setlocal nomodified
+
+  augroup END
 
 endfunction

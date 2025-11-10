@@ -41,3 +41,12 @@ command AKGrep call aikido#GrepPrompt()
 " If the current commit is empty then th eparent commit is checked.  Grepping
 " is done using :vimgrep.
 command AKGrepCword call aikido#Grep(expand("<cword>"))
+
+""
+" Modifies or creates a description for the current commit.
+"
+" If invoked with [!] then the description will not commit the working copy.
+"
+" If [revision] is provided, then the description for the provided commit will
+" be altered instead.
+command -nargs=? -bang AKDesc call aikido#Describe(<bang>, <f-args>)

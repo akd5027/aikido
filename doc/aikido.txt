@@ -72,6 +72,14 @@ COMMANDS                                                     *aikido-commands*
   If the current commit is empty then th eparent commit is checked.  Grepping
   is done using :vimgrep.
 
+:AKDesc[!] [revision]                                                *:AKDesc*
+  Modifies or creates a description for the current commit.
+
+  If invoked with [!] then the description will not commit the working copy.
+
+  If [revision] is provided, then the description for the provided commit will
+  be altered instead.
+
 ==============================================================================
 FUNCTIONS                                                   *aikido-functions*
 
@@ -109,10 +117,12 @@ aikido#NewCommit()                                        *aikido#NewCommit()*
 
   CURRENTLY A WORK-IN-PROGRESS
 
-aikido#Describe()                                          *aikido#Describe()*
+aikido#Describe({bang}, [revisions])                       *aikido#Describe()*
   Updates the current commit message for the working copy.
 
-  CURRENTLY A WORK-IN-PROGRESS
+  If [revisions] is not provided, it will default to the current commit.
+
+  As with other commands, this command will not commit the working copy.
 
 
 vim:tw=78:ts=8:ft=help:norl:
