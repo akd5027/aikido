@@ -58,14 +58,14 @@ COMMANDS                                                     *aikido-commands*
   [commit] is \@ if omitted.
 
 
-:AKGrep                                                              *:AKGrep*
+:AKGrep[!]                                                           *:AKGrep*
   Greps for a prompt-provided string in all files represented by the current
   commit.
 
   If the current commit is empty then th eparent commit is checked.  Grepping
   is done using :vimgrep.
 
-:AKGrepCword                                                    *:AKGrepCword*
+:AKGrepCword[!]                                                 *:AKGrepCword*
   Greps for the word under the cursor in all files represented by the current
   commit.
 
@@ -86,11 +86,11 @@ FUNCTIONS                                                   *aikido-functions*
 aikido#Root()                                                  *aikido#Root()*
   Returns the root of the VCS Workspace.
 
-aikido#Grep({word})                                            *aikido#Grep()*
+aikido#Grep({bang}, {word})                                    *aikido#Grep()*
   Searches through modified and new files to find the |<cword>|, returning the
   matching lines in the quickfix window..
 
-aikido#GrepPrompt()                                      *aikido#GrepPrompt()*
+aikido#GrepPrompt({bang})                                *aikido#GrepPrompt()*
   Searches through modified and new files to find a certain string, returning
   the matching lines in the quickfix window..
 
@@ -117,12 +117,23 @@ aikido#NewCommit()                                        *aikido#NewCommit()*
 
   CURRENTLY A WORK-IN-PROGRESS
 
-aikido#Describe({bang}, [revisions])                       *aikido#Describe()*
-  Updates the current commit message for the working copy.
+aikido#Describe({bang}, [revisions], [bang])               *aikido#Describe()*
+  Updates the current commit message for the working copy.  By default this
+  also commits all saved buffers and not-yet-committed local changes in the
+  typical JJ manner.
 
   If [revisions] is not provided, it will default to the current commit.
 
-  As with other commands, this command will not commit the working copy.
+  If [bang] is provided, this will not commit the current working directory.
+
+aikido#Graph()                                                *aikido#Graph()*
+  Shows the commit graph for this repository.
+
+  This graph is interactive and can switch to a different commit by selecting
+  with the cursor.  <Enter> will select the highlighted commit and make it the
+  new active commit.  <n> will create a new commit atop the highlighted commit
+  and <d> will modify the description of the highlighted commit
+  (experimental).
 
 
 vim:tw=78:ts=8:ft=help:norl:

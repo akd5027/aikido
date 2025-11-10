@@ -17,11 +17,11 @@ function! s:GetModifiedFiles(...) abort
   return split(info_call.Call().stdout, '\n')
 endfunction
 
-function! s:GetRecentModifiedFiles() abort
-  let rev = '@'
+function! s:GetRecentModifiedFiles(rev) abort
+  let rev = a:rev
   let files = s:GetModifiedFiles(l:rev)
 
-  if empty(l:files)
+  if a:rev != '@-' && empty(l:files)
     let rev = '@-'
     let files = s:GetModifiedFiles(l:rev)
   endif
@@ -57,8 +57,8 @@ endfunction
 " @public
 " Searches through modified and new files to find the |<cword>|, returning the
 " matching lines in the quickfix window..
-function! aikido#Grep(word) abort
-  let [rev, files] = s:GetRecentModifiedFiles()
+function! aikido#Grep(bang, word) abort
+  let [rev, files] = s:GetRecentModifiedFiles(a:bang ? '@-' : '@')
   execute 'vimgrep /' .. a:word .. '/g ' .. join(l:files, ' ')
   :cw
 endfunction
@@ -67,12 +67,12 @@ endfunction
 " @public
 " Searches through modified and new files to find a certain string, returning
 " the matching lines in the quickfix window..
-function! aikido#GrepPrompt() abort
+function! aikido#GrepPrompt(bang) abort
   call inputsave()
   let pattern = input('pattern: ')
   call inputrestore()
 
-  call aikido#Grep(l:pattern)
+  call aikido#Grep(a:bang, l:pattern)
 endfunction
 
 ""
@@ -100,9 +100,9 @@ function! aikido#Diff(...) abort
   call deletebufline(l:diff_buff, 1)
 
   if l:vertical
-    execute 'vertical sbuffer' ..  l:diff_buff
+    execute 'leftabove vertical sbuffer' ..  l:diff_buff
   else
-    execute 'sbuffer ' .. l:diff_buff
+    execute 'leftabove sbuffer ' .. l:diff_buff
   endif
 
   setlocal bufhidden=wipe buftype=nofile
@@ -144,11 +144,12 @@ endfunction
 " @public
 " An FZF selection pop-up for files currently changed compared to the first
 " parent commit.
-function! aikido#Changes() abort
-  let [rev, files] = s:GetRecentModifiedFiles()
+function! aikido#Changes(...) abort
+  let [rev, files] = s:GetRecentModifiedFiles(get(a:, 1, '@'))
 
   call fpop#Picker(l:files, #{
         \fzf_args: [
+          \'--exact',
           \'--header=enter open | ^s split | ^v diff',
           \'--preview=jj file show -r ' .. l:rev ..' {}',
           \'--preview-window=' .. s:plugin.Flag('file_preview_split'),
@@ -170,11 +171,13 @@ endfunction
 
 ""
 " @public
-" Updates the current commit message for the working copy.
+" Updates the current commit message for the working copy.  By default this also
+" commits all saved buffers and not-yet-committed local changes in the typical
+" JJ manner.
 "
 " If [revisions] is not provided, it will default to the current commit.
 "
-" As with other commands, this command will not commit the working copy.
+" If [bang] is provided, this will not commit the current working directory.
 function! aikido#Describe(bang, ...)
   let rev = get(a:, 1, '@')
 
@@ -183,11 +186,7 @@ function! aikido#Describe(bang, ...)
         \'--template=builtin_draft_commit_description',
         \l:rev]
 
-  let bang_args = []
-  if a:bang
-    bang_args += ['--ignore_working_copy']
-  endif
-
+  let bang_args = a:bang ? ['--ignore-working-copy'] : []
   let message = maktaba#syscall#Create(['jj','show'] + l:bang_args + l:args)
         \.Call().stdout->split('\n')
 
@@ -200,16 +199,94 @@ function! aikido#Describe(bang, ...)
 
   execute 'sbuffer ' .. l:desc_buf
 
-  setlocal bufhidden=wipe buftype=acwrite filetype=jjdescription
+  setlocal bufhidden=wipe buftype=acwrite filetype=jjdescription autowrite
 
   augroup aikido_diff_close
     autocmd!
 
-    autocmd BufWriteCmd <buffer> call maktaba#syscall#Create(
-          \['jj', 'describe', '--stdin'] + l:bang_args)
-          \.WithStdin(getline(1, '$')->join("\n")).Call()
-    autocmd BufWriteCmd <buffer> setlocal nomodified
-
+    if a:bang
+      autocmd BufWriteCmd <buffer> call maktaba#syscall#Create(
+            \['jj', 'describe', '--stdin', '--ignore-working-copy'])
+            \.WithStdin(getline(1, '$')->join("\n")).Call()
+    else
+      autocmd BufWriteCmd <buffer> call maktaba#syscall#Create(
+            \['jj', 'describe', '--stdin'])
+            \.WithStdin(getline(1, '$')->join("\n")).Call()
+    endif
   augroup END
 
+endfunction
+
+""
+" @private
+" Shows the current jj graph in a separate window.aikido:plugin[mappings]aikido:plugin[mappings]
+function! aikido#ShowLog()
+  let message = maktaba#syscall#Create(['jj', '--ignore-working-copy', 'log', '--color=never',
+        \'--template', 'separate(" ", change_id.short(), author.name(), bookmarks, tags, description.first_line(), commit_id.short())'])
+        \.Call().stdout->split('\n')
+
+  if exists("s:graph_buf")
+    bwipeout '_aikido_graph'
+  endif
+
+  let s:graph_buf =  bufadd('_aikido_graph')
+  call bufload(s:graph_buf)
+
+  call deletebufline(s:graph_buf, 1, "$")
+  call appendbufline(s:graph_buf, 1, l:message)
+  call deletebufline(s:graph_buf, 1)
+endfunction
+
+""
+" @private
+" Changes the current commit based on a the graph <line> and the requested <action>.
+function! aikido#ChangeCommit(action)
+  let commit = aikido#ExtractCommit()->split(' ')[-1]
+
+  call maktaba#syscall#Create(['jj', a:action, l:commit]).Call()
+  call aikido#ShowLog()
+endfunction
+
+""
+" @private
+" Extracts the commit from a hilighted line in the current buffer.
+function! aikido#ExtractCommit()
+  let line_num = line(".")
+  let commit = getline(l:line_num)->split(' ')[-1]
+
+  if len(l:commit) < 5
+    let commit = getline(l:line_num - 1)->split(' ')[-1]
+  endif
+
+  return l:commit
+endfunction
+
+""
+" @public
+" Shows the commit graph for this repository.
+"
+" This graph is interactive and can switch to a different commit by selecting
+" with the cursor.  <Enter> will select the highlighted commit and make it the
+" new active commit.  <n> will create a new commit atop the highlighted commit
+" and <d> will modify the description of the highlighted commit (experimental).
+function! aikido#Graph()
+  call aikido#ShowLog()
+
+  execute 'sbuffer ' .. s:graph_buf
+
+  setlocal bufhidden=wipe buftype=nowrite readonly filetype=jjlog syntax=ON
+
+  map <buffer> <Enter> :call aikido#ChangeCommit('edit')<CR>
+  map <buffer> n :call aikido#ChangeCommit('new')<CR>
+  map <buffer> d :call aikido#Describe(1, aikido#ExtractCommit()) \| call aikido#ShowLog()<CR>
+endfunction
+
+""
+" @public
+" Updates the working copy and then uploads the current commit.
+"
+" This literally calls upload with no arguments at this point in time, nothing
+" more, nothing less.
+function! aikido#Upload()
+  call maktaba#syscall#Create(['jj', 'upload']).Call()
 endfunction

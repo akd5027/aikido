@@ -30,9 +30,9 @@ command -nargs=? AKChanges call aikido#Changes(<f-args>)
 " Greps for a prompt-provided string in all files represented by the current
 " commit.
 "
-" If the current commit is empty then th eparent commit is checked.  Grepping
+" If the current commit is empty then the parent commit is checked.  Grepping
 " is done using :vimgrep.
-command AKGrep call aikido#GrepPrompt()
+command -bang AKGrep call aikido#GrepPrompt(<bang>0)
 
 ""
 " Greps for the word under the cursor in all files represented by the current
@@ -40,7 +40,7 @@ command AKGrep call aikido#GrepPrompt()
 "
 " If the current commit is empty then th eparent commit is checked.  Grepping
 " is done using :vimgrep.
-command AKGrepCword call aikido#Grep(expand("<cword>"))
+command -bang AKGrepCword call aikido#Grep(<bang>0, expand("<cword>"))
 
 ""
 " Modifies or creates a description for the current commit.
@@ -49,4 +49,16 @@ command AKGrepCword call aikido#Grep(expand("<cword>"))
 "
 " If [revision] is provided, then the description for the provided commit will
 " be altered instead.
-command -nargs=? -bang AKDesc call aikido#Describe(<bang>, <f-args>)
+command -nargs=? -bang AKDesc call aikido#Describe(<bang>0, <f-args>)
+
+""
+" Opens an interactive JJ log graph.
+"
+" * <Enter> will 'edit' the commit beneath the cursor.
+" * <n> will add a 'new' commit atop the commit beneath the cursor.
+" * <d> will edit the description of the commit beneath the cursor. (experimental>
+command AKGraph call aikido#Graph()
+
+""
+" Updates and uploads the current commit.
+command JjUpload call aikido#Upload()

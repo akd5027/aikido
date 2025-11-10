@@ -9,6 +9,7 @@ aikido#Annotate()	aikido.txt	/*aikido#Annotate()*
 aikido#Changes()	aikido.txt	/*aikido#Changes()*
 aikido#Describe()	aikido.txt	/*aikido#Describe()*
 aikido#Diff()	aikido.txt	/*aikido#Diff()*
+aikido#Graph()	aikido.txt	/*aikido#Graph()*
 aikido#Grep()	aikido.txt	/*aikido#Grep()*
 aikido#GrepPrompt()	aikido.txt	/*aikido#GrepPrompt()*
 aikido#NewCommit()	aikido.txt	/*aikido#NewCommit()*
