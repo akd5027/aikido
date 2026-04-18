@@ -32,7 +32,7 @@ command -nargs=? AKChanges call aikido#Changes(<f-args>)
 "
 " If the current commit is empty then the parent commit is checked.  Grepping
 " is done using :vimgrep.
-command -bang AKGrep call aikido#GrepPrompt(<bang>0)
+command AKGrep call aikido#GrepPrompt()
 
 ""
 " Greps for the word under the cursor in all files represented by the current
@@ -40,7 +40,7 @@ command -bang AKGrep call aikido#GrepPrompt(<bang>0)
 "
 " If the current commit is empty then th eparent commit is checked.  Grepping
 " is done using :vimgrep.
-command -bang AKGrepCword call aikido#Grep(<bang>0, expand("<cword>"))
+command AKGrepCword call aikido#Grep(expand("<cword>"))
 
 ""
 " Modifies or creates a description for the current commit.
@@ -50,6 +50,11 @@ command -bang AKGrepCword call aikido#Grep(<bang>0, expand("<cword>"))
 " If [revision] is provided, then the description for the provided commit will
 " be altered instead.
 command -nargs=? -bang AKDesc call aikido#Describe(<bang>0, <f-args>)
+
+""
+" Opens a scroll-bound window showing previous changes to hunks within
+" the active file at the current comit.
+command AKAnnotate call aikido#Annotate()
 
 ""
 " Opens an interactive JJ log graph.

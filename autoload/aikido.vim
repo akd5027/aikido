@@ -1,32 +1,80 @@
 let s:plugin = maktaba#plugin#Get('aikido')
 
+function! s:IsActiveCommitUndescribed() abort
+  let empty_call = maktaba#syscall#Create([
+        \'jj', 'log',
+        \'--no-graph',
+        \'--ignore-working-copy',
+        \'--revisions', '@',
+        \'--template', 'description'
+      \])
+
+  " Using wc instead of grep to avoid try/catch performance hits.
+  let empty_check = maktaba#syscall#Create([
+        \"wc", "-c"
+        \])
+
+  let result = l:empty_check.WithStdin(l:empty_call.Call().stdout).Call()
+
+  return l:result.stdout == 0
+endfunction
+
+function s:RevIsRoot(rev)
+  let root_log = maktaba#syscall#Create([
+        \'jj', 'log',
+        \'--ignore-working-copy',
+        \'--no-graph',
+        \'--revisions', a:rev,
+        \'--template', 'commit_id'
+      \])
+
+  " Using wc instead of grep to avoid try/catch performance hits.
+  let root_check = maktaba#syscall#Create([
+        \"wc", "-c"
+        \])
+
+  let result = l:root_check.WithStdin(l:root_log.Call().stdout).Call()
+
+  return l:result.stdout == 0
+endfunction
+
+""
+" @private
+" Returns a list of revisions indicating a range of commits representing the
+" "active" revset.
+"
+" In the event that we are sitting atop the target commit (in
+" true-to-JJ-fashion), then this revset will return a revset indicating the
+" current "working" commit as well as the target commit.  This will be done
+" based on whether or not the current commit has a description or not.  If the
+" current commit has no description then we assume it is related to its
+" predecessor commit.  This empty-parent discovery does not cascade and
+" currently only moves up to the parent and no further.
+function s:LegalActiveRevset() abort
+  if s:IsActiveCommitUndescribed()
+    if s:RevIsRoot('@-')
+      throw 'RootError'
+    endif
+    return ['@-', '@']
+  endif
+
+  return ['@']
+endfunction
+
 ""
 " Gets the currently important modified files.
 "
 " If this is run in an empty commit then the parent commit is used instead.
-function! s:GetModifiedFiles(...) abort
-  let rev = get(a:, 1, '@')
+function! s:GetModifiedFiles(revset) abort
   let info_call = maktaba#syscall#Create([
         \'jj', 'log',
         \'--no-graph',
         \'--ignore-working-copy',
-        \'--revisions=' .. l:rev,
-        \'--template=self.diff().files().map(|file| file.path().display()).join("\n")',
+        \'--revisions', join(a:revset, '::'),
+        \'--template', 'self.diff().files().map(|file| file.path().display()).join("\n")',
       \])
 
   return split(info_call.Call().stdout, '\n')
-endfunction
-
-function! s:GetRecentModifiedFiles(rev) abort
-  let rev = a:rev
-  let files = s:GetModifiedFiles(l:rev)
-
-  if a:rev != '@-' && empty(l:files)
-    let rev = '@-'
-    let files = s:GetModifiedFiles(l:rev)
-  endif
-
-  return [l:rev, l:files]
 endfunction
 
 ""
@@ -57,22 +105,22 @@ endfunction
 " @public
 " Searches through modified and new files to find the |<cword>|, returning the
 " matching lines in the quickfix window..
-function! aikido#Grep(bang, word) abort
-  let [rev, files] = s:GetRecentModifiedFiles(a:bang ? '@-' : '@')
+function! aikido#Grep(word) abort
+  let files = s:GetModifiedFiles(s:LegalActiveRevset())
   execute 'vimgrep /' .. a:word .. '/g ' .. join(l:files, ' ')
-  :cw
+  cw
 endfunction
 
 ""
 " @public
 " Searches through modified and new files to find a certain string, returning
 " the matching lines in the quickfix window..
-function! aikido#GrepPrompt(bang) abort
+function! aikido#GrepPrompt() abort
   call inputsave()
   let pattern = input('pattern: ')
   call inputrestore()
 
-  call aikido#Grep(a:bang, l:pattern)
+  call aikido#Grep(l:pattern)
 endfunction
 
 ""
@@ -82,10 +130,18 @@ endfunction
 " This is the implementation for @command(Akdiff)
 " @default revision="@-"
 "
-function! aikido#Diff(...) abort
-  let rev = get(a:, 1, '@-')
-  let vertical = get(a:, 2, 0)
-  let content = systemlist('jj file show --quiet --revision=' .. l:rev .. ' -- ' .. expand("%"))
+function! aikido#Diff(revision = '@-', ...) abort
+  let vertical = get(a:, 1, 0)
+  let diff_call = maktaba#syscall#Create([
+        \'jj', 'file',
+        \'show',
+        \'--quiet',
+        \'--revision', a:revision,
+        \'--',
+        \expand("%")
+      \])
+
+  let content = split(diff_call.Call().stdout, '\n')
   let buffer_name = 'diff_' .. expand("%:t")
 
   if bufexists(l:buffer_name)
@@ -116,9 +172,22 @@ endfunction
 ""
 " @public
 " Diffs the working copy against [revision] with a vertical split.
-function! aikido#Vdiff(...) abort
-  let rev = get(a:, 1, '@-')
-  call aikido#Diff(l:rev, 1)
+function! aikido#Vdiff(revision = '@-') abort
+  call aikido#Diff(a:revision, 1)
+endfunction
+
+function! aikido#AnnotateCallback(buffer, syscall)
+  if a:syscall.status != 0
+    execute 'silent bwipeout ' .. a:buffer
+
+    echohl ErrMsg
+    for line in split(a:syscall.stderr, '\n')
+      echom l:line
+    endfor
+    echoerr "Annotation failed"
+  else
+    call setbufline(a:buffer, 1, split(a:syscall.stdout, '\n'))
+  endif
 endfunction
 
 ""
@@ -126,17 +195,53 @@ endfunction
 " Provides annotations for each line of code and when it was last changed, the
 " most recent author, etc.
 function! aikido#Annotate() abort
-  let content = systemlist('jj file annotate --quiet -T "if(self.first_line_in_hunk(), commit.change_id().short(7) ++ \" \" ++ commit.author().email().local()) ++ \"\n\"" -- ' .. expand("%"))
-  let blame_buff = bufadd('akblame')
 
-  silent execute 'topleft vert sb +vertical\ resize\ 30 ' .. l:blame_buff
+  let first_line_template = s:plugin.Flag('annotate_hunk_first_line_template')
+  let secondary_entries = s:plugin.Flag('annotate_hunk_secondary_line_templates')
+  let secondary_line_template = string("")
 
-  call appendbufline(l:blame_buff, 1, l:content)
-  call deletebufline(l:blame_buff, 1)
+  let full_file = expand("%:p")
+  for [k, v] in items(l:secondary_entries)
+    if l:full_file =~ l:k
+      let secondary_line_template = l:v
+      break
+    endif
+  endfor
 
-  setlocal buftype=nofile bufhidden=wipe
-  wincmd p
+  let template = 'if(' .. join([
+        \'self.first_line_in_hunk()',
+        \l:first_line_template,
+        \l:secondary_line_template],
+      \',') .. ') ++ "\n"'
+
+  let annotate_call = maktaba#syscall#Create([
+        \'jj', 'file', 'annotate',
+        \'--quiet',
+        \'--template', l:template,
+        \'--',
+        \expand("%")])
+
   setlocal scrollbind
+  let line_count = line('$')
+  let current_line = line('w0')
+  let old_offset = &g:scrolloff
+  let &g:scrolloff=0
+
+  let annotate_buff = bufadd('akannotate')
+  silent execute 'vert leftabove sb +vertical\ resize\ 30 ' .. l:annotate_buff
+  setlocal buftype=nofile winfixwidth signcolumn=no nonumber bufhidden=wipe filetype=jjannotate syntax=ON
+
+  call appendbufline(l:annotate_buff, 1, repeat(['-- fetching annotations --'], l:line_count - 1))
+  execute 'normal! ' .. l:current_line .. 'Gzt'
+  setlocal scrollbind
+  :syncbind
+
+  wincmd p
+  let &g:scrolloff = l:old_offset
+
+  call annotate_call.CallAsync(
+        \maktaba#function#Create('aikido#AnnotateCallback', [l:annotate_buff]),
+        \1)
 
 endfunction
 
@@ -145,14 +250,17 @@ endfunction
 " An FZF selection pop-up for files currently changed compared to the first
 " parent commit.
 function! aikido#Changes(...) abort
-  let [rev, files] = s:GetRecentModifiedFiles(get(a:, 1, '@'))
+  let revset = get(a:, 1, s:LegalActiveRevset())
 
+  let files = s:GetModifiedFiles(l:revset)
+
+  " We always preview the file at the current commit currently.
   call fpop#Picker(l:files, #{
         \fzf_args: [
           \'--exact',
           \'--header=enter open | ^s split | ^v diff',
-          \'--preview=jj file show -r ' .. l:rev ..' {}',
-          \'--preview-window=' .. s:plugin.Flag('file_preview_split'),
+          \'--preview', 'jj file show -r @ {} | batcat -p --color=always -l python',
+          \'--preview-window', s:plugin.Flag('file_preview_split'),
           \'--expect=enter,ctrl-s,ctrl-v'
         \],
         \callback: function('aikido#ChangeCallback')

@@ -27,6 +27,15 @@ Vertical split results in a side-by-side preview, while a horizontal split
 results in a top-and-bottom preview.
 Default: 'right' `
 
+                                    *aikido:annotate_hunk_first_line_template*
+During annotation, this template is used for JJ expression of the the first
+line of each hunk when `jj file annotate` is called on a file.
+
+                               *aikido:annotate_hunk_secondary_line_templates*
+During annotation, this template is used for lines that are not the first hunk
+of an difference block.
+Default: {} `
+
                                                      *aikido:plugin[commands]*
 Configures whether plugin/commands.vim should be loaded.
 Default: 1 `
@@ -58,14 +67,14 @@ COMMANDS                                                     *aikido-commands*
   [commit] is \@ if omitted.
 
 
-:AKGrep[!]                                                           *:AKGrep*
+:AKGrep                                                              *:AKGrep*
   Greps for a prompt-provided string in all files represented by the current
   commit.
 
-  If the current commit is empty then th eparent commit is checked.  Grepping
+  If the current commit is empty then the parent commit is checked.  Grepping
   is done using :vimgrep.
 
-:AKGrepCword[!]                                                 *:AKGrepCword*
+:AKGrepCword                                                    *:AKGrepCword*
   Greps for the word under the cursor in all files represented by the current
   commit.
 
@@ -80,28 +89,43 @@ COMMANDS                                                     *aikido-commands*
   If [revision] is provided, then the description for the provided commit will
   be altered instead.
 
+:AKAnnotate                                                      *:AKAnnotate*
+  Opens a scroll-bound window showing previous changes to hunks within the
+  active file at the current comit.
+
+:AKGraph                                                            *:AKGraph*
+  Opens an interactive JJ log graph.
+
+    * <Enter> will 'edit' the commit beneath the cursor.
+    * <n> will add a 'new' commit atop the commit beneath the cursor.
+    * <d> will edit the description of the commit beneath the cursor.
+      (experimental>
+
+:JjUpload                                                          *:JjUpload*
+  Updates and uploads the current commit.
+
 ==============================================================================
 FUNCTIONS                                                   *aikido-functions*
 
 aikido#Root()                                                  *aikido#Root()*
   Returns the root of the VCS Workspace.
 
-aikido#Grep({bang}, {word})                                    *aikido#Grep()*
+aikido#Grep({word})                                            *aikido#Grep()*
   Searches through modified and new files to find the |<cword>|, returning the
   matching lines in the quickfix window..
 
-aikido#GrepPrompt({bang})                                *aikido#GrepPrompt()*
+aikido#GrepPrompt()                                      *aikido#GrepPrompt()*
   Searches through modified and new files to find a certain string, returning
   the matching lines in the quickfix window..
 
-aikido#Diff([revision])                                        *aikido#Diff()*
+aikido#Diff({revision}, [revision])                            *aikido#Diff()*
   Diffs the working copy against [revision].
 
   This is the implementation for |:Akdiff|
   [revision] is "@-" if omitted.
 
 
-aikido#Vdiff([revision])                                      *aikido#Vdiff()*
+aikido#Vdiff({revision})                                      *aikido#Vdiff()*
   Diffs the working copy against [revision] with a vertical split.
 
 aikido#Annotate()                                          *aikido#Annotate()*
@@ -134,6 +158,12 @@ aikido#Graph()                                                *aikido#Graph()*
   new active commit.  <n> will create a new commit atop the highlighted commit
   and <d> will modify the description of the highlighted commit
   (experimental).
+
+aikido#Upload()                                              *aikido#Upload()*
+  Updates the working copy and then uploads the current commit.
+
+  This literally calls upload with no arguments at this point in time, nothing
+  more, nothing less.
 
 
 vim:tw=78:ts=8:ft=help:norl:
