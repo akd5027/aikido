@@ -181,8 +181,9 @@ endfunction
 ""
 " @public
 " Diffs the working copy against [revision] with a vertical split.
-function! aikido#Vdiff(revision = "@-") abort " {{{
-  call aikido#Diff(a:revision, 1)
+function! aikido#Vdiff(...) abort " {{{
+  let rev = get(a:, 1, '@-')
+  call aikido#Diff(l:rev, 1)
 endfunction
 " }}}
 
@@ -284,10 +285,9 @@ endfunction
 ""
 " @public
 " Establishes a new commit with the current working changes.
-"
-" CURRENTLY A WORK-IN-PROGRESS
-function! aikido#NewCommit(...) " {{{
-    maktaba#syscall#Create(['jj', 'new'] + get(a:, 0, []))
+function! aikido#NewCommit(bang, ...) " {{{
+  let bang_args = a:bang ? ['--ignore-working-copy'] : []
+    maktaba#syscall#Create(['jj', 'new'] + l:bang_args + get(a:, 0, []))
 endfunction
 " }}}
 
@@ -297,14 +297,15 @@ endfunction
 " commits all saved buffers and not-yet-committed local changes in the typical
 " JJ manner.
 "
-" If [rev] is not provided, it will default to the current commit.
+" If {bang} is provided, this will not commit the current working directory.
 "
-" If [bang] is provided, this will not commit the current working directory.
-function! aikido#Describe(bang, rev = '@') " {{{
+" If [rev] is not provided, it will default to the current commit.
+function! aikido#Describe(bang, ...) " {{{
+  let rev = get(a:, 1, '@')
   let args = [
         \'--no-patch',
         \'--template', 'builtin_draft_commit_description',
-        \a:rev]
+        \l:rev]
 
   let bang_args = a:bang ? ['--ignore-working-copy'] : []
   let message = maktaba#syscall#Create(['jj','show'] + l:bang_args + l:args)

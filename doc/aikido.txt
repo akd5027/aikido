@@ -104,6 +104,12 @@ COMMANDS                                                     *aikido-commands*
 :JjUpload                                                          *:JjUpload*
   Updates and uploads the current commit.
 
+:AKNew[!]                                                             *:AKNew*
+  Creates a new commit.
+
+  If invoked with [!] then the existing changes will not be included in the
+  current commit before creating the new commit.
+
 ==============================================================================
 FUNCTIONS                                                   *aikido-functions*
 
@@ -125,7 +131,7 @@ aikido#Diff({revision}, [revision])                            *aikido#Diff()*
   [revision] is "@-" if omitted.
 
 
-aikido#Vdiff({revision})                                      *aikido#Vdiff()*
+aikido#Vdiff([revision])                                      *aikido#Vdiff()*
   Diffs the working copy against [revision] with a vertical split.
 
 aikido#Annotate()                                          *aikido#Annotate()*
@@ -136,19 +142,17 @@ aikido#Changes()                                            *aikido#Changes()*
   An FZF selection pop-up for files currently changed compared to the first
   parent commit.
 
-aikido#NewCommit()                                        *aikido#NewCommit()*
+aikido#NewCommit({bang})                                  *aikido#NewCommit()*
   Establishes a new commit with the current working changes.
 
-  CURRENTLY A WORK-IN-PROGRESS
-
-aikido#Describe({bang}, [revisions], [bang])               *aikido#Describe()*
+aikido#Describe({bang}, [rev])                             *aikido#Describe()*
   Updates the current commit message for the working copy.  By default this
   also commits all saved buffers and not-yet-committed local changes in the
   typical JJ manner.
 
-  If [revisions] is not provided, it will default to the current commit.
+  If {bang} is provided, this will not commit the current working directory.
 
-  If [bang] is provided, this will not commit the current working directory.
+  If [rev] is not provided, it will default to the current commit.
 
 aikido#Graph()                                                *aikido#Graph()*
   Shows the commit graph for this repository.
