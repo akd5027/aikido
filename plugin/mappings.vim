@@ -3,6 +3,7 @@ if !s:enter
   finish
 endif
 
+" All prefab mappings will start with '<prefix>a' by default.
 let s:prefix = s:plugin.MapPrefix('a')
 
 " Diffs the working file vertically against its state in the first ancestor's

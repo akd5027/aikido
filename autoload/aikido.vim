@@ -297,7 +297,7 @@ endfunction
 " commits all saved buffers and not-yet-committed local changes in the typical
 " JJ manner.
 "
-" If [revisions] is not provided, it will default to the current commit.
+" If [rev] is not provided, it will default to the current commit.
 "
 " If [bang] is provided, this will not commit the current working directory.
 function! aikido#Describe(bang, rev = '@') " {{{
