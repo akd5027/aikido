@@ -25,7 +25,7 @@ function s:RevIsRoot(rev) " {{{
         \'jj', 'log',
         \'--ignore-working-copy',
         \'--no-graph',
-        \'--revisions', a:rev,
+        \'--revisions', a:rev .. ' & root()',
         \'--template', 'commit_id'
       \])
 
