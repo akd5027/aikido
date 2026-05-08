@@ -300,13 +300,11 @@ endfunction
 " If [revisions] is not provided, it will default to the current commit.
 "
 " If [bang] is provided, this will not commit the current working directory.
-function! aikido#Describe(bang, ...) " {{{
-  let rev = get(a:, 1, '@')
-
+function! aikido#Describe(bang, rev = '@') " {{{
   let args = [
         \'--no-patch',
-        \'--template=builtin_draft_commit_description',
-        \l:rev]
+        \'--template', 'builtin_draft_commit_description',
+        \a:rev]
 
   let bang_args = a:bang ? ['--ignore-working-copy'] : []
   let message = maktaba#syscall#Create(['jj','show'] + l:bang_args + l:args)
@@ -321,20 +319,26 @@ function! aikido#Describe(bang, ...) " {{{
 
   execute 'sbuffer ' .. l:desc_buf
 
-  setlocal bufhidden=wipe buftype=acwrite filetype=jjdescription autowrite
+  let l:old_ul = &l:undolevels
+  setlocal bufhidden=wipe buftype=acwrite filetype=jjdescription undolevels=-1
+  execute "silent! normal! i \<BS>"
+  let &l:undolevels = l:old_ul
+  setlocal nomodified
 
-  augroup aikido_diff_close
+  augroup aikido_desc_close
     autocmd!
 
     if a:bang
       autocmd BufWriteCmd <buffer> call maktaba#syscall#Create(
             \['jj', 'describe', '--stdin', '--ignore-working-copy'])
-            \.WithStdin(getline(1, '$')->join("\n")).Call()
+            \.WithStdin(getline(1, '$')->filter('v:val !~ "^JJ[[:upper:]]*:"')->join("\n")).Call()
     else
       autocmd BufWriteCmd <buffer> call maktaba#syscall#Create(
             \['jj', 'describe', '--stdin'])
-            \.WithStdin(getline(1, '$')->join("\n")).Call()
+            \.WithStdin(getline(1, '$')->filter('v:val !~ "^JJ[[:upper:]]*:"')->join("\n")).Call()
     endif
+
+    autocmd BufWriteCmd <buffer> setlocal nomodified
   augroup END
 
 endfunction
