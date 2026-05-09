@@ -66,7 +66,7 @@ command AKGraph call aikido#Graph()
 
 ""
 " Updates and uploads the current commit.
-command JjUpload call aikido#Upload()
+command AKUpload call aikido#Upload()
 
 ""
 " Creates a new commit.

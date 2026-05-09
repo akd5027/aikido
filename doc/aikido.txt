@@ -101,7 +101,7 @@ COMMANDS                                                     *aikido-commands*
     * <d> will edit the description of the commit beneath the cursor.
       (experimental>
 
-:JjUpload                                                          *:JjUpload*
+:AKUpload                                                          *:AKUpload*
   Updates and uploads the current commit.
 
 :AKNew[!]                                                             *:AKNew*
