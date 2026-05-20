@@ -39,9 +39,12 @@ Default: {} `
                                                          *aikido:file_preview*
 An array of command args to use when previewing a file.
 
+When Aikido previews a local file, this command will be used and will
+additionally be passed the file-to-preview.
+
 Alternate "cat"-like programs and mandatory arguments can be provided.  The
 provided arguments will be invoked as a bash command and will be joined by
-whitespace separators.
+whitespace separators and suffixed with the file to preview.
 Default: ["cat"] `
 
                                                      *aikido:plugin[commands]*
@@ -135,7 +138,7 @@ aikido#GrepPrompt()                                      *aikido#GrepPrompt()*
 aikido#Diff({revision}, [revision])                            *aikido#Diff()*
   Diffs the working copy against [revision].
 
-  This is the implementation for |:Akdiff|
+  This is the implementation for |:AKDiff|
   [revision] is "@-" if omitted.
 
 

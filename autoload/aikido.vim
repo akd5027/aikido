@@ -135,7 +135,7 @@ endfunction
 " @public
 " Diffs the working copy against [revision].
 "
-" This is the implementation for @command(Akdiff)
+" This is the implementation for @command(AKDiff)
 " @default revision="@-"
 "
 function! aikido#Diff(revision = '@-', ...) abort " {{{

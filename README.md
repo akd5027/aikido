@@ -5,8 +5,7 @@ provides a reasonable starting point for JJ-related convenience interactions.
 
 ## Dependencies
 
-This plugin requires you to additionally have the following plugins also
-installed:
+This plugin requires you to additionally have the following plugins installed:
 
 *   `akd5027/fpop.git`
 
