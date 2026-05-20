@@ -55,7 +55,7 @@ endfunction
 function s:LegalActiveRevset() abort " {{{
   if s:IsActiveCommitUndescribed()
     if s:RevIsRoot('@-')
-      throw 'RootError'
+      return ['@']
     endif
     return ['@-', '@']
   endif
@@ -272,7 +272,7 @@ function! aikido#Changes(...) abort " {{{
         \fzf_args: [
           \'--exact',
           \'--header=enter open | ^s split | ^v diff',
-          \'--preview', 'jj file show -r @ {} | batcat -p --color=always -l python',
+          \'--preview', join(s:plugin.Flag('file_preview') + ['{}'], " "),
           \'--preview-window', s:plugin.Flag('file_preview_split'),
           \'--expect=enter,ctrl-s,ctrl-v'
         \],

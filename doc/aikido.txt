@@ -36,6 +36,14 @@ During annotation, this template is used for lines that are not the first hunk
 of an difference block.
 Default: {} `
 
+                                                         *aikido:file_preview*
+An array of command args to use when previewing a file.
+
+Alternate "cat"-like programs and mandatory arguments can be provided.  The
+provided arguments will be invoked as a bash command and will be joined by
+whitespace separators.
+Default: ["cat"] `
+
                                                      *aikido:plugin[commands]*
 Configures whether plugin/commands.vim should be loaded.
 Default: 1 `

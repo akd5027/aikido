@@ -26,4 +26,35 @@ Command      | Description
 
 You can map these on your own in your vimrc file.
 
+## Glaive
+
+Glaive can be used to opt-in to default Aikido mappings and can personalize flags.  In order to include the default Aikido mappings 
+
+### Setting up Glaive
+
+In short, you will add
+
+```vim
+<PluginManager> 'google/vim-glaive'
+
+"""
+" Conclude plugin manager.
+"""
+
+" Ensure Glaive is installed
+call glaive#Install()
+```
+
+### Basic Configuration
+
+```vim
+" Using default aikido mappings
+Glaive aikido plugin[mappings]
+
+" Using batcat instead of 'cat' for file previews with colors.
+Glaive aikido file_preview=`['batcat', '--plain', '--color=always']`
+```
+
+## Help Docs
+
 Run `:help aikido` for more guidance and for new commands.

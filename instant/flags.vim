@@ -29,3 +29,14 @@ call s:plugin.Flag('annotate_hunk_first_line_template', '" + " ++ join(" ", comm
 " During annotation, this template is used for lines that are not the first hunk
 " of an difference block.
 call s:plugin.Flag('annotate_hunk_secondary_line_templates', {})
+
+""
+" An array of command args to use when previewing a file.
+"
+" When Aikido previews a local file, this command will be used and will
+" additionally be passed the file-to-preview.
+"
+" Alternate "cat"-like programs and mandatory arguments can be provided.  The
+" provided arguments will be invoked as a bash command and will be joined by
+" whitespace separators and suffixed with the file to preview.
+call s:plugin.Flag('file_preview', ["cat"])
