@@ -1,4 +1,6 @@
 let s:plugin = maktaba#plugin#Get('aikido')
+let s:fpop = maktaba#plugin#Get('fpop')
+
 
 function! s:IsActiveCommitUndescribed() abort " {{{
   let empty_call = maktaba#syscall#Create([
@@ -83,18 +85,14 @@ endfunction
 
 ""
 " A callback for the FZF modified file picker.
-function! aikido#ChangeCallback(lines) " {{{
-  let [command ; multi_file] = split(a:lines[0])
-  let file = join(l:multi_file, ' ')
-
-  if l:command == "enter"
-    exec 'edit ' . l:file
-  elseif l:command == "ctrl-s"
-    exec 'vertical split ' . l:file
-  elseif l:command == "ctrl-v"
-    exec 'edit ' . l:file
+function! aikido#ChangeCallback(action, file) " {{{
+  if a:action == "ctrl-v"
+    exec 'edit ' . a:file
     call aikido#Vdiff('@-')
+    return v:true
   endif
+
+  return v:false
 endfunction
 " }}}
 
@@ -268,15 +266,9 @@ function! aikido#Changes(...) abort " {{{
   let files = s:GetModifiedFiles(l:revset)
 
   " We always preview the file at the current commit currently.
-  call fpop#Picker(l:files, #{
-        \fzf_args: [
-          \'--exact',
-          \'--header=enter open | ^s split | ^v diff',
-          \'--preview', join(s:plugin.Flag('file_preview') + ['{}'], " "),
-          \'--preview-window', s:plugin.Flag('file_preview_split'),
-          \'--expect=enter,ctrl-s,ctrl-v'
-        \],
-        \callback: function('aikido#ChangeCallback')
+  call fpop#FilePicker(l:files, #{
+        \extra_options: {'ctrl-v': 'diff'},
+        \extra_callback: function('aikido#ChangeCallback')
       \}
     \)
 endfunction
