@@ -27,7 +27,7 @@ function s:RevIsRoot(rev) " {{{
         \'jj', 'log',
         \'--ignore-working-copy',
         \'--no-graph',
-        \'--revisions', a:rev .. ' & root()',
+        \'--revisions', a:rev .. ' & remote_bookmarks()',
         \'--template', 'commit_id'
       \])
 
@@ -38,7 +38,7 @@ function s:RevIsRoot(rev) " {{{
 
   let result = l:root_check.WithStdin(l:root_log.Call().stdout).Call()
 
-  return l:result.stdout == 0
+  return l:result.stdout != 0
 endfunction
 " }}}
 
