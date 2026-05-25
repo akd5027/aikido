@@ -73,4 +73,4 @@ command AKUpload call aikido#Upload()
 "
 " If invoked with [!] then the existing changes will not be included in the
 " current commit before creating the new commit.
-command -bang AKNew call aikido#NewCommit(<bang>0)
+command -nargs=* -bang AKNew call aikido#NewCommit(<bang>0, <f-args>)

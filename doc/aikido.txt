@@ -103,6 +103,9 @@ FUNCTIONS                                                   *aikido-functions*
 aikido#Root()                                                  *aikido#Root()*
   Returns the root of the VCS Workspace.
 
+  This is not memoized since we do not yet track the current directory in a
+  way that can invalidate the cached root.
+
 aikido#Grep({word})                                            *aikido#Grep()*
   Searches through modified and new files to find the |<cword>|, returning the
   matching lines in the quickfix window..
@@ -131,6 +134,12 @@ aikido#Changes()                                            *aikido#Changes()*
 
 aikido#NewCommit({bang})                                  *aikido#NewCommit()*
   Establishes a new commit with the current working changes.
+
+  Writes all repo-controlled buffers with modifications before creating the
+  new commit.
+
+  If [!] is provided then un-written buffers will remain unwritten an no
+  working-commit changes will be included in the existing JJ commit.
 
 aikido#Describe({bang}, [rev])                             *aikido#Describe()*
   Updates the current commit message for the working copy.  By default this

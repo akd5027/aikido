@@ -2,7 +2,7 @@ let s:plugin = maktaba#plugin#Get('aikido')
 let s:fpop = maktaba#plugin#Get('fpop')
 
 
-function! s:IsActiveCommitUndescribed() abort " {{{
+function s:IsActiveCommitUndescribed() abort " {{{
   let empty_call = maktaba#syscall#Create([
         \'jj', 'log',
         \'--no-graph',
@@ -70,7 +70,7 @@ endfunction
 " Gets the currently important modified files.
 "
 " If this is run in an empty commit then the parent commit is used instead.
-function! s:GetModifiedFiles(revset) abort " {{{
+function s:GetModifiedFiles(revset) abort " {{{
   let info_call = maktaba#syscall#Create([
         \'jj', 'log',
         \'--no-graph',
@@ -85,7 +85,7 @@ endfunction
 
 ""
 " A callback for the FZF modified file picker.
-function! aikido#ChangeCallback(action, file) " {{{
+function aikido#ChangeCallback(action, file) " {{{
   if a:action == "ctrl-v"
     exec 'edit ' . a:file
     call aikido#Vdiff('@-')
@@ -99,7 +99,10 @@ endfunction
 ""
 " @public
 " Returns the root of the VCS Workspace.
-function! aikido#Root() abort " {{{
+"
+" This is not memoized since we do not yet track the current directory in a
+" way that can invalidate the cached root.
+function aikido#Root() abort " {{{
   return trim(maktaba#syscall#Create(['jj', 'root']).Call().stdout)
 endfunction
 " }}}
@@ -109,7 +112,7 @@ endfunction
 " @public
 " Searches through modified and new files to find the |<cword>|, returning the
 " matching lines in the quickfix window..
-function! aikido#Grep(word) abort " {{{
+function aikido#Grep(word) abort " {{{
   let files = s:GetModifiedFiles(s:LegalActiveRevset())
   execute 'vimgrep /' .. a:word .. '/g ' .. join(l:files, ' ')
   cw
@@ -120,7 +123,7 @@ endfunction
 " @public
 " Searches through modified and new files to find a certain string, returning
 " the matching lines in the quickfix window..
-function! aikido#GrepPrompt() abort " {{{
+function aikido#GrepPrompt() abort " {{{
   call inputsave()
   let pattern = input('pattern: ')
   call inputrestore()
@@ -136,7 +139,7 @@ endfunction
 " This is the implementation for @command(AKDiff)
 " @default revision="@-"
 "
-function! aikido#Diff(revision = '@-', ...) abort " {{{
+function aikido#Diff(revision = '@-', ...) abort " {{{
   let vertical = get(a:, 1, 0)
   let diff_call = maktaba#syscall#Create([
         \'jj', 'file',
@@ -179,13 +182,13 @@ endfunction
 ""
 " @public
 " Diffs the working copy against [revision] with a vertical split.
-function! aikido#Vdiff(...) abort " {{{
+function aikido#Vdiff(...) abort " {{{
   let rev = get(a:, 1, '@-')
   call aikido#Diff(l:rev, 1)
 endfunction
 " }}}
 
-function! aikido#AnnotateCallback(buffer, syscall) " {{{
+function aikido#AnnotateCallback(buffer, syscall) " {{{
   if a:syscall.status != 0
     execute 'silent bwipeout ' .. a:buffer
 
@@ -204,7 +207,7 @@ endfunction
 " @public
 " Provides annotations for each line of code and when it was last changed, the
 " most recent author, etc.
-function! aikido#Annotate() abort " {{{
+function aikido#Annotate() abort " {{{
 
   let first_line_template = s:plugin.Flag('annotate_hunk_first_line_template')
   let secondary_entries = s:plugin.Flag('annotate_hunk_secondary_line_templates')
@@ -260,7 +263,7 @@ endfunction
 " @public
 " An FZF selection pop-up for files currently changed compared to the first
 " parent commit.
-function! aikido#Changes(...) abort " {{{
+function aikido#Changes(...) abort " {{{
   let revset = get(a:, 1, s:LegalActiveRevset())
 
   let files = s:GetModifiedFiles(l:revset)
@@ -277,9 +280,33 @@ endfunction
 ""
 " @public
 " Establishes a new commit with the current working changes.
-function! aikido#NewCommit(bang, ...) " {{{
+"
+" Writes all repo-controlled buffers with modifications before creating the
+" new commit.
+"
+" If [!] is provided then un-written buffers will remain unwritten an no
+" working-commit changes will be included in the existing JJ commit.
+function aikido#NewCommit(bang, ...) " {{{
   let bang_args = a:bang ? ['--ignore-working-copy'] : []
-    maktaba#syscall#Create(['jj', 'new'] + l:bang_args + get(a:, 0, []))
+
+  let new_commit = maktaba#syscall#Create(['jj', 'new'] + l:bang_args + a:000)
+
+  " Bang indicates no updates to existing buffers, nor committing the working
+  " commit before creating a new commit.
+  if !a:bang
+    " Discover all controlled buffers
+    let controlled_buffers = getbufinfo({'buflisted': 1})
+          \->copy()
+          \->filter({_, buf -> buf.name =~ '^' .. aikido#Root()})
+          \->mapnew({_, buf -> buf.bufnr })
+
+    " Save all controlled buffers
+    for buf in l:controlled_buffers
+      noautocmd call win_execute(bufwinid(l:buf), 'write')
+    endfor
+  endif
+
+  call new_commit.Call()
 endfunction
 " }}}
 
@@ -292,7 +319,7 @@ endfunction
 " If {bang} is provided, this will not commit the current working directory.
 "
 " If [rev] is not provided, it will default to the current commit.
-function! aikido#Describe(bang, ...) " {{{
+function aikido#Describe(bang, ...) " {{{
   let rev = get(a:, 1, '@')
   let args = [
         \'--no-patch',
@@ -340,7 +367,7 @@ endfunction
 ""
 " @private
 " Shows the current jj graph in a separate window.aikido:plugin[mappings]aikido:plugin[mappings]
-function! aikido#ShowLog() " {{{
+function aikido#ShowLog() " {{{
   let message = maktaba#syscall#Create(['jj', '--ignore-working-copy', 'log', '--color=never',
         \'--template', 'separate(" ", change_id.short(), author.name(), bookmarks, tags, description.first_line(), commit_id.short())'])
         \.Call().stdout->split('\n')
@@ -361,7 +388,7 @@ endfunction
 ""
 " @private
 " Changes the current commit based on a the graph <line> and the requested <action>.
-function! aikido#ChangeCommit(action) " {{{
+function aikido#ChangeCommit(action) " {{{
   let commit = aikido#ExtractCommit()->split(' ')[-1]
 
   call maktaba#syscall#Create(['jj', a:action, l:commit]).Call()
@@ -372,7 +399,7 @@ endfunction
 ""
 " @private
 " Extracts the commit from a hilighted line in the current buffer.
-function! aikido#ExtractCommit() " {{{
+function aikido#ExtractCommit() " {{{
   let line_num = line(".")
   let commit = getline(l:line_num)->split(' ')[-1]
 
@@ -392,7 +419,7 @@ endfunction
 " with the cursor.  <Enter> will select the highlighted commit and make it the
 " new active commit.  <n> will create a new commit atop the highlighted commit
 " and <d> will modify the description of the highlighted commit (experimental).
-function! aikido#Graph() " {{{
+function aikido#Graph() " {{{
   call aikido#ShowLog()
 
   execute 'sbuffer ' .. s:graph_buf
@@ -411,7 +438,7 @@ endfunction
 "
 " This literally calls upload with no arguments at this point in time, nothing
 " more, nothing less.
-function! aikido#Upload() " {{{
+function aikido#Upload() " {{{
   call maktaba#syscall#Create(['jj', 'upload']).Call()
 endfunction
 " }}}
