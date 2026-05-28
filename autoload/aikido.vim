@@ -442,3 +442,40 @@ function aikido#Upload() " {{{
   call maktaba#syscall#Create(['jj', 'upload']).Call()
 endfunction
 " }}}
+
+""
+" @public
+" Restores the provided {file} to a specified {revision}.
+"
+" {file} is a working-directory-relative file path or an absolute path.
+"
+" Restoration is always assumed to be run "to" the working commit.
+"
+" {revision} is set to '@-' if not provided.
+function aikido#Restore(file, revision = '@-') abort " {{{
+  call s:plugin.logger.Debug(string(['jj', 'restore', '--from', a:revision, a:file]))
+  call maktaba#syscall#Create(['jj', 'restore', '--from', a:revision, a:file]).Call()
+
+  let bufnr = bufnr(a:file)
+  if l:bufnr == -1
+    return
+  endif
+
+  let winid = bufwinid(l:bufnr)
+
+  " Either update the buffer if it is in an active window, preserving undo
+  " history, or if the buffer is only loaded but not in an active window just
+  " update the buffer itself.  Otherwise the file is changed on disk but ViM has
+  " no relationship with the buffer, so no action needs to be taken.
+  if l:winid != -1
+    call win_execute(l:winid, 'edit!')
+  elseif bufloaded(l:bufnr)
+    let current_bufnr = bufnr('%')
+
+    execute 'silent keepalt b ' .. l:bufnr
+    edit!
+    execute 'silent keepalt b ' .. l.current_bufnr
+  endif
+
+endfunction
+" }}}

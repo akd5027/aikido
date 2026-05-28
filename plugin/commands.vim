@@ -74,3 +74,9 @@ command AKUpload call aikido#Upload()
 " If invoked with [!] then the existing changes will not be included in the
 " current commit before creating the new commit.
 command -nargs=* -bang AKNew call aikido#NewCommit(<bang>0, <f-args>)
+
+""
+" Restores the current file (active buffer) to the provided revision.
+"
+" The revision is defaulted to '@-' if not specified.
+command -nargs=* AKRestore call aikido#Restore(expand('%'), <f-args>)

@@ -97,6 +97,11 @@ COMMANDS                                                     *aikido-commands*
   If invoked with [!] then the existing changes will not be included in the
   current commit before creating the new commit.
 
+:AKRestore                                                        *:AKRestore*
+  Restores the current file (active buffer) to the provided revision.
+
+  The revision is defaulted to '@-' if not specified.
+
 ==============================================================================
 FUNCTIONS                                                   *aikido-functions*
 
@@ -164,6 +169,15 @@ aikido#Upload()                                              *aikido#Upload()*
 
   This literally calls upload with no arguments at this point in time, nothing
   more, nothing less.
+
+aikido#Restore({file}, {revision})                          *aikido#Restore()*
+  Restores the provided {file} to a specified {revision}.
+
+  {file} is a working-directory-relative file path or an absolute path.
+
+  Restoration is always assumed to be run "to" the working commit.
+
+  {revision} is set to '@-' if not provided.
 
 
 vim:tw=78:ts=8:ft=help:norl:
