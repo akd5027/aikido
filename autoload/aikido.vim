@@ -76,7 +76,7 @@ function s:GetModifiedFiles(revset) abort " {{{
         \'--no-graph',
         \'--ignore-working-copy',
         \'--revisions', join(a:revset, '::'),
-        \'--template', 'self.diff().files().map(|file| file.path().display()).join("\n")',
+        \'--template', 'self.diff().files().map(|file| file.path().display()).join("\n") ++ "\n"',
       \])
 
   return split(info_call.Call().stdout, '\n')
